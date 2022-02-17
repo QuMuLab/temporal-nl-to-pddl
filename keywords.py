@@ -40,10 +40,9 @@ class Keywords:
         print(wordLs)
         for link in links:
             if link not in lookedAt:
-                newWords = Keywords.findKeywords(sentences, link, wordLs, lookedAt)
-                wordLs.append(newWords)
-            else:
-                return wordLs
+                text = getattr(sentences[link], 'text')
+                wordLs.append(text.split())
+                lookedAt.append(link)
         return wordLs
     
     # Returns a dictionary with words as keys and number of occurances of that word in the 
