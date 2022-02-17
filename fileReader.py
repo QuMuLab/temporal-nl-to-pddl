@@ -39,8 +39,4 @@ def fileTest(filePath):
     #Display.printSentenceDic(sentences)
     #SentenceProcessor.createReverseLinks(sentences)
     #Display.printSentenceDic(sentences)
-    
-    #jsonSentences = json.dumps(sentences.__dict__)
-    #with open('json1.txt', 'w') as f:
-        #f.write(jsonSentences)
     return(sentences)
