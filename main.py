@@ -18,9 +18,7 @@ def main():
         for i in range(0,numFiles):
             sentence = fileReader.fileTest(files[i])
             #Display.printDic(sentences)
-            print("We are here")
             Display.printSentenceDic(sentence)
-            print("Now we are here")
             #sentences.append(sentence) # returns a list of sentence objects
     print("Data loaded.")
     print("Finding keywords...")
