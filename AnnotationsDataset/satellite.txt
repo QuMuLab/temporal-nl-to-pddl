@@ -1,0 +1,9 @@
+This action turns an instrument on a satellite to on, and takes 2 minutes to complete. The satellite must have power at the start in order for the instrument to be switched on. The instrument must be on board the satellite. The instrument is not calibrated at the start, and power is on at the end but is not available at the start of the action.
+
+An action to switch an instrument on a satellite on. The duration of the action is 2 minutes. The instrument must be onboard the satellite throughout, there must be power available on the satellite to start. At the start of the action the instrument is not calibrated and there is no power available at the satellite any more. At the end of the action the instrument is turned on.
+
+An action to switch an instrument on a satellite to the on position. The duration is 2. For an instrument to be switched on, there must be power available on the satellite and the satellite must be equipped with the instrument. Once switched on, the instrument will have power, but the satellite's power will no longer be available. The instrument will also not be calibrated at the start of the action.
+ 
+This action lasts 2 minutes. This action turns on an instrument on a satellite. At the start, power must be available on the satellite. The instrument must also be on board the satellite. When the action starts, the power is not available to the satellite and the instrument is not calibrated. At the end, the power is on the instrument. 
+
+An action that switches a given instrument on a given satellite on. The action requires that the instrument to activate is on the satellite and that the satellite has power for the instrument. After the action the instrument is on. At the start, the satellite does not have power available, and the instrument is designated as uncalibrated. The action takes 2 minutes to complete. 

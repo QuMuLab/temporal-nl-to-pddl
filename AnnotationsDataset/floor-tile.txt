@@ -1,0 +1,9 @@
+This action changes the color that a robot is using from color 1 to color 2. Color 2 must be available to the robot for the entire duration of the action. It takes 5 minutes to change colors. At the end the robot does not have color 1, but it has color 2.
+
+An action to change color, given a robot and the first and second color. The duration of the action is 5 minutes. At the start, the robot has the first color, and the second color must be available throughout the action. At the end, the robot will no longer have the first color, bur will have the second color. 
+
+The action is for a robot to change the color. This action’s duration is 5 minutes. There must be an original color and a potential for a color that is available to be chosen. When the action is done the color can not be the same as the initial color. By the end the color must be new. 
+
+An action for a robot to change from one color to another color. Before the action, the robot must have the original colour. Over all, the second color must be available. The color change takes 5 minutes. After the robot has changed color, the robot no longer has the first color and has the second color instead.
+
+An action that changes the colour currently being used by a painting robot given the robot, the current colour used by the robot c, and the new color to be used c2. The action requires that the robot is currently equipped with colour c and that the new color c2 is available for use. After the action, the robot no longer has color c and is now equipped with colour c2. The action takes 5 minutes to complete.

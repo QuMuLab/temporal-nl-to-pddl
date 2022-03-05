@@ -1,0 +1,9 @@
+This action loads a truck with an object. Both the truck and the object must be at location loc for the entire action. It takes 2 minutes to load an object into the truck. At the end, the object is in the truck.
+
+An action to load a truck, given an object, truck, and location. The duration of the action is 2 minutes. The truck must be at the location the entire time, the object must be at the location at the start. At the end, the object will be in the truck and no longer at the location.
+
+An action to load a truck at a given location with an object. The duration is 2. For a truck to be loaded with an object, it must be at the same location as the object. 
+
+An action to load an object into a truck that is bound at a location. The amount of time to load the truck is 2 minutes. The truck must be at the location to start loading, and remain at the location the entire time loading takes place. After loading, the object will no longer be at the location, but it will be in the truck. 
+
+An action to load an object into a truck given the object, truck, and loading location. The truck and object both need to be at the loading location at the start of the action. After the action, the object is no longer at the location and is in the truck. The duration of this action is 2 minutes.

@@ -1,0 +1,11 @@
+It takes one minute to move the car from the source to the destination. At the start the car is at
+the source. At the end the car is at the destination.
+
+An action to move from curb to curb. The duration of the action is 1 minute. At the start the car and destination curb must be clear, and the car must be at the source curb. At the end the destination curb will no longer be clear, the car will not be at the source curb, the car will be at the destination curb, and the source curb will be clear.
+
+An action to move a car from one curb to another. The duration is 1. To perform this action, the car and the destination must be clear.
+
+This action is moving a car. This action takes 1 minute. Before moving the car, the car should be clear and the first curb should be clear. Once the action is completed the second curb should not be clear. 
+
+An action to move from one curb to another curb. It takes one minute to complete this action. Before the action starts, the car and the destination curb must be clear. The car must also be at the starting curb. After the action is completed, the curb destination is not clear and the starting curb is clear. The car is not at the curb destination and not at the starting curb. 
+

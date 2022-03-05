@@ -1,0 +1,9 @@
+This is an action to light a match. There has to be an unused match available at the start. The action causes the match to be lit at the start, but not at the end. The match can burn for 5 minutes. 
+
+An action to light a match. The duration of the action is 5 minutes. The match must be initially unused. At the start of the action the match will no longer be unused and the match will be lit. At the end of the action the match will not be lit.
+
+An action to light a match. The duration is 5. For a match to be lit, it must be previously unused.
+
+This action lights a match. This action lasts 5 minutes. At the start, the match must be unused. When the action starts, the match becomes used and the match is lit. At the end, the match is not lit. 
+
+An action to light a match given the match to light. The action requires that the match to light is currently unused. At the start of the action, the match is designated as used and is lit. When the action is completed, the match is no longer lit. The action takes 5 minutes to complete. 
