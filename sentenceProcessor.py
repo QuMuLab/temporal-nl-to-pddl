@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from display import Display
+import nltk
 
 class Sentence:
     def __init__(sentence, text, id, links):
@@ -21,6 +22,37 @@ class SentenceProcessor:
         sim = cosine_similarity([sentence_embeddings[0]], sentence_embeddings[1:])
         #print(sim)
         return sim
+
+    def tokenize(annot):
+        annot = nltk.sent_tokenize(annot)
+        return annot
+
+    # Use NLTK to tokenize (break up into a list of sentences) each annotation
+    def tokenizeAll(annotLs):
+        for i in range(0,5):
+            print("Annotation",i)
+            print(annotLs[i])
+            annotLs[i] = SentenceProcessor.tokenize(annotLs[i])
+        return annotLs
+
+     #tokenize sentences
+    def getPossibleParamsandPreds(sentence, POS):
+        #sentence = nltk.sent_tokenize(sentence)
+         #empty to array to hold all nouns
+        sentence = sentence.replace('.','')
+        sentence = sentence.replace(',','')
+        words = []
+        if POS == 'params':
+            for word,pos in nltk.pos_tag(nltk.word_tokenize(str(sentence))):
+                if (pos == 'NN' or pos == 'NNP' or pos == 'NNS' or pos == 'NNPS'):
+                    #words.append(word+" ("+pos+")")
+                    words.append(word)
+        elif POS == 'preds':
+            for word,pos in nltk.pos_tag(nltk.word_tokenize(str(sentence))):
+                if (pos == 'JJ' or pos == 'JJR' or pos == 'JJS' or pos == 'IN' or pos == 'RBR' or pos == 'RBS' or pos == 'VBD' or 'VBG' or pos == 'VBN' or pos == 'VBZ'):
+                    #words.append(word+" ("+pos+")")
+                    words.append(word)
+        return words
     
     # Create a new dictionary based on the input dictionary where each key in the new dictionary
     # holds the indices corresponding to sentences with the highest similarity the key sentence 
@@ -47,7 +79,7 @@ class SentenceProcessor:
     # that holds the text, id, and links for the sentence. Store these sentences in a dictionary
     # and return the dictionary
     def createSentenceObjects(indexDic, fileNum):
-        Display.printDic(indexDic)
+        #Display.printDic(indexDic)
         sentenceNum = 0
         prevNum = 0
         annotNum = 0
@@ -62,10 +94,10 @@ class SentenceProcessor:
                 (indexDic[key])[count] = str(fileNum) + str(count + annotNum + 1) + str(num)
                 count += 1
             id = str(fileNum) + str(annotNum) + str(sentenceNum)
-            print("Id: %s", id)
-            print("Key %s", key)
-            print("Links: %s", indexDic[key])
-            print(": %s", indexDic[key])
+            #print("Id: %s", id)
+            #print("Key %s", key)
+            #print("Links: %s", indexDic[key])
+            #print(": %s", indexDic[key])
             sentences[id] = Sentence(key, [fileNum, annotNum, sentenceNum], indexDic[key])
             sentenceNum += 1
         return sentences
@@ -75,21 +107,14 @@ class SentenceProcessor:
     def createSimilarityDic(annot):
         #Display.printSentenceDic(annot)
         similarityDic = {}
-        for i in range(0,6):
+        for i in range(0,5):
             for sentence in annot[i]:
                 newLs = []
-                if (i == 5):
+                if (i == 4):
                     similarityDic[sentence] = newLs
                 else:
-                    for j in range(i+1,6):
-                        print("Annot")
-                        print(j)
-                        print(annot[j])
+                    for j in range(i+1,5):
                         newLs.append(SentenceProcessor.checkSim(sentence, annot[j]))
-                        print("Sentence:")
-                        print(sentence)
-                        print("NewLs:")
-                        print(newLs)
                         similarityDic[sentence] = newLs
         return similarityDic
 
@@ -100,7 +125,7 @@ class SentenceProcessor:
             links1 = getattr(sentences[id],'links')
             if links1 != None:
                 for num in links1:
-                    print("Num: %s, ID: %s, Int Num: %s, Int ID: %s", num, id, int(num), int(id))
+                    #print("Num: %s, ID: %s, Int Num: %s, Int ID: %s", num, id, int(num), int(id))
                     if int(num) > int(id) and sentences.get(num) != None :
                         links2 = getattr(sentences[num],'links')
                         if links2 == None:
