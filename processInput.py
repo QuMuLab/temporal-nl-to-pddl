@@ -3,7 +3,7 @@ import sentenceProcessor
 import nltk
 from sentence_transformers import SentenceTransformer
 
-num_actions = 7
+num_actions = 8
 names = ['loadTruck', 'changeColor', 'movecurbtocurb', 'untrap', 'LIGHT_MATCH', 'lift', 'movevehicleroad', 'switchon']
 durationWords = ['duration', 'takes', 'lasts']
 
@@ -67,7 +67,7 @@ def getPrompts(matches, inputSentence):
                 name = actionName + 'Effect'
                 sims = data.Data.similarities[actionName][1]
                 effectValue = (sims[annotNum])[sentenceNum]
-        value = 0.0
+        value = 0
         if effectValue > conditionValue:
             value = effectValue
             type = 'effect'
@@ -131,6 +131,18 @@ def replaceReverse(result, params, preds):
         predCount += 1
     return result
 
+def getMin(matches):
+    lowest = 1
+    lowestInd = 0
+    count = 0
+    for match in matches:
+        if match[3] < lowest:
+            lowest = match[3]
+            lowestInd = count
+        count += 1
+    return lowestInd
+
+
 # Takes a string representing the input and checks the similarity (cosine similarity) of the sentence
 # with all other sentences in the database. The location (indices) of the sentences with similarities 
 # above a certain threshold are stored in a list called 'matches', which is returned at the end.
@@ -143,11 +155,18 @@ def testInputSim(inputSentence, model):
         annots = ls[1]
         for j in range(0,5):
             sims = findSimilarities(input_embedding, annots[j], name, i, j)
+            ind = 0
+            added = False
             count = 0
             for simMetric in sims[0]:
-                if simMetric > 0.7:
+                if (len(matches) < 10):
                     matches.append([i, j, count, simMetric])
-                count += 1    
+                    count += 1
+                elif matches:
+                    lowestInd = getMin(matches)
+                    lowest = (matches[lowestInd])[3]
+                    if simMetric > lowest:
+                        matches[lowestInd] = [i, j, count, simMetric]   
     return matches
 
 # Example usage: printPDDL('movePickle', [['pickle'], ['jar']], [['top']], 5, ['(and (at start (on ?pickle ?jar))'], ['(and (at end (in ?pickle ?jar))'])
@@ -226,6 +245,7 @@ def main():
     print("Predicate selection complete.")
     print("The predicates are: ")
     print(preds)
+    duration = '0'
     for inputText in inputLs:
         if (checkDuration(inputText)):
             for word in inputText.split():
@@ -237,11 +257,10 @@ def main():
         inputText = replaceParamsandPreds(inputText, params, preds, 0)
         matches = testInputSim(inputText, model)
         prompts = getPrompts(matches, inputText)
-        if prompts:
+        if len(prompts) > 2:
             print("Use the following text as input to GPT3.")
             for prompt in prompts:
                 print(prompt)
-            #inputText = replaceParamsandPreds(inputText, params, preds, 0)
             print(inputText)
             print("\n")
             result = input("Paste the first line of the GPT3 output here:")
@@ -262,6 +281,8 @@ def main():
                 pass
             elif (type == '4'):
                 pass
+        else:
+            print("Could not generate a prompt for this sentence...trying the next sentence.")
     name = input("What would you like to call this action?")
     printPDDL(name, params, preds, duration, conditions, effects)   
 
