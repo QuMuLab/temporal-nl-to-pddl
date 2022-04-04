@@ -1,5 +1,6 @@
 import data
 import sentenceProcessor
+import postProcessor
 import nltk
 from sentence_transformers import SentenceTransformer
 
@@ -7,38 +8,55 @@ num_actions = 8
 names = ['loadTruck', 'changeColor', 'movecurbtocurb', 'untrap', 'LIGHT_MATCH', 'lift', 'movevehicleroad', 'switchon']
 durationWords = ['duration', 'takes', 'lasts']
 
-# Removes the parenthesese and question marks from a line of PDDL code,
-# and returns the modified line of code.
+# removes the parenthesese and question marks from a line of PDDL code,
+# and returns the modified line of code
 def translate(codeLine):
     codeLine = codeLine.replace("(","")
     codeLine = codeLine.replace(")","")
     codeLine = codeLine.replace("?","")
     return codeLine
 
-# Takes a sentence from the database, a line of PDDL code that is supposed to 
+# takes a sentence from the database, a line of PDDL code that is supposed to 
 # represent some or all what is described by the sentence, lists holding
 # the parameters and predicates in the sentence, and an integer corresponding
-# to the position of this part of the prompt relative to the other parts.
+# to the position of this part of the prompt relative to the other parts
 def makePrompt(sentence, codeLine, params1, preds1, promptNum):
     paramCount = 1
     for ls in params1:
         for param in ls:
-            codeLine = codeLine.replace(param,"param"+str(promptNum)+str(paramCount))
-            sentence = sentence.replace(param,"param"+str(promptNum)+str(paramCount))
+            if param[0] == '?':
+                codeLine = codeLine.replace(param,"<<<?param"+str(promptNum)+str(paramCount)+">>>")
+            else:
+                codeLine = codeLine.replace("?"+param,"<<<?param"+str(promptNum)+str(paramCount)+">>>")
+            left = codeLine.split("<<<",1)
+            right = codeLine.split(">>>",1)
+            if len(left) > 1:
+                if ((right[1][0] != ' ') and (right[1][0] != ')')) or (left[0][-1] != ' '):
+                    codeLine = codeLine.replace("<<<?param"+str(promptNum)+str(paramCount)+">>>", param) 
+            sentence = sentence.replace(param,"param"+str(promptNum)+str(paramCount))  
+            codeLine = codeLine.replace("<<<","")
+            codeLine = codeLine.replace(">>>","")
         paramCount += 1
     predCount = 1
     for ls in preds1:
         for pred in ls:
-            codeLine = codeLine.replace(pred,"pred"+str(promptNum)+str(predCount))
+            codeLine = codeLine.replace(pred,"<<<pred"+str(promptNum)+str(predCount)+">>>")
+            left = codeLine.split("<<<",1)
+            right = codeLine.split(">>>",1)
+            if len(left) > 1:
+                if (right[1][0] != ' ') or (left[0][-1] != '('):
+                    codeLine = codeLine.replace("<<<pred"+str(promptNum)+str(predCount)+">>>", pred)
+            codeLine = codeLine.replace("<<<","")
+            codeLine = codeLine.replace(">>>","")
             sentence = sentence.replace(pred,"pred"+str(promptNum)+str(predCount))
         predCount += 1
     prompt = sentence + '\n' + codeLine + '\n'
     return prompt
 
-# Takes a list holding information about the sentences in the database that are similar to
+# takes a list holding information about the sentences in the database that are similar to
 # the input sentence, and the input sentence itself. Returns a list of partial prompts that
 # are created using the 'makePrompt' function, based on the information stored in the 
-# 'matches' list.
+# 'matches' list
 def getPrompts(matches, inputSentence):
     prompts = []
     values = []
@@ -96,7 +114,7 @@ def findSimilarities(inputEmbedding, annot, name, actionNum, annotNum):
     sim = sentenceProcessor.SentenceProcessor.checkSim(inputEmbedding, tokenizedAnnot, actionNum, annotNum)
     return sim
 
-# Takes an input string representing a piece of natural language text,
+# takes an input string representing a piece of natural language text,
 # a list of parameters and a list of predicates found in that text, 
 # and an integer that corresponds to the position of this particular piece 
 # of text relative to the others that are found in the same prompt.
@@ -106,18 +124,22 @@ def replaceParamsandPreds(text, params, preds, num):
     paramCount = 0
     for ls1 in params:
         for param in ls1:
-            text = text.replace(param,"param"+str(num)+str(paramCount))
+            text = text.replace(" "+param+" "," param"+str(num)+str(paramCount)+" ")
+            text = text.replace(" "+param+","," param"+str(num)+str(paramCount)+",")
+            text = text.replace(" "+param+"."," param"+str(num)+str(paramCount)+".") # should replace at the start too
         paramCount += 1
     predCount = 0
     for ls2 in preds:
         for pred in ls2:
-            text = text.replace(pred,"pred"+str(num)+str(predCount))
+            text = text.replace(" "+pred+" "," pred"+str(num)+str(predCount)+" ")
+            text = text.replace(" "+pred+","," pred"+str(num)+str(predCount)+",")
+            text = text.replace(" "+pred+"."," pred"+str(num)+str(predCount)+".") # should replace at the start too
         predCount += 1
     return text 
 
-# Reverses the effects of the 'replaceParamsandPreds' function.
+# reverses the effects of the 'replaceParamsandPreds' function.
 # To be used on the output of a GPT3 call in order to obtain 
-# the proper PDDL code result.
+# the proper PDDL code result
 def replaceReverse(result, params, preds):
     paramCount = 0
     for ls1 in params:
@@ -131,6 +153,7 @@ def replaceReverse(result, params, preds):
         predCount += 1
     return result
 
+# gets the match with the lowest (cosine) similarity to the input sentence
 def getMin(matches):
     lowest = 1
     lowestInd = 0
@@ -142,10 +165,9 @@ def getMin(matches):
         count += 1
     return lowestInd
 
-
-# Takes a string representing the input and checks the similarity (cosine similarity) of the sentence
+# takes a string representing the input and checks the similarity (cosine similarity) of the sentence
 # with all other sentences in the database. The location (indices) of the sentences with similarities 
-# above a certain threshold are stored in a list called 'matches', which is returned at the end.
+# above a certain threshold are stored in a list called 'matches', which is returned at the end
 def testInputSim(inputSentence, model):
     input_embedding = model.encode([inputSentence])
     matches = []
@@ -159,7 +181,7 @@ def testInputSim(inputSentence, model):
             added = False
             count = 0
             for simMetric in sims[0]:
-                if (len(matches) < 10):
+                if (len(matches) < 5):
                     matches.append([i, j, count, simMetric])
                     count += 1
                 elif matches:
@@ -169,7 +191,7 @@ def testInputSim(inputSentence, model):
                         matches[lowestInd] = [i, j, count, simMetric]   
     return matches
 
-# Example usage: printPDDL('movePickle', [['pickle'], ['jar']], [['top']], 5, ['(and (at start (on ?pickle ?jar))'], ['(and (at end (in ?pickle ?jar))'])
+# example usage: printPDDL('movePickle', [['pickle'], ['jar']], [['top']], 5, ['(and (at start (on ?pickle ?jar))'], ['(and (at end (in ?pickle ?jar))'])
 def printPDDL(name, params, preds, duration, conditions, effects):
     print("(:durative-action "+name)
     print("    :parameters")
@@ -180,11 +202,15 @@ def printPDDL(name, params, preds, duration, conditions, effects):
     print("    :duration")
     print("        (= ?duration " + duration + ")")
     print("    :condition")
+    print("        (and ")
     for condition in conditions:
         print("        "+condition)
+    print("        )")
     print("    :effect")
+    print("        (and ")
     for effect in effects:
         print("        "+effect)
+    print("        )")
     print(")")
 
 # checks whether the sentence contains a word associated with a duration statement (i.e. a word in 'durationWords')
@@ -212,8 +238,22 @@ def main():
     doneSelection = False
     while(not doneSelection):
         num = input()
-        print("You have selected '"+possibleParams[int(num)]+"'")
-        params.append([possibleParams[int(num)]])
+        addedLs = False
+        try:
+            ls = eval(num)
+            if isinstance(ls, list):
+                string = ''
+                for num in ls:
+                    string += possibleParams[int(num)]
+                    string += ' '
+                print("You have selected '"+string+"'")
+                params.append([string])
+                addedLs = True
+        except SyntaxError:
+            pass
+        if not addedLs:
+            print("You have selected '"+possibleParams[int(num)]+"'")
+            params.append([possibleParams[int(num)]])
         print("Would you like to select another parameter?")
         decision = input("Enter 'y' or 'n'")
         if decision != 'y':
@@ -257,33 +297,47 @@ def main():
         inputText = replaceParamsandPreds(inputText, params, preds, 0)
         matches = testInputSim(inputText, model)
         prompts = getPrompts(matches, inputText)
-        if len(prompts) > 2:
-            print("Use the following text as input to GPT3.")
+        if len(prompts) > 2: #change this
+            print("Use the following text as input to GPT3:")
             for prompt in prompts:
                 print(prompt)
             print(inputText)
             print("\n")
             result = input("Paste the first line of the GPT3 output here:")
-            result = replaceReverse(result, params, preds)
-            print("Here is the generated code for this sentence:")
-            print(result)
-            print("Select whether the above line of code is a condition or an effect.")
-            print("1: condition")
-            print("2: effect")
-            print("3: both")
-            print("4: neither")
-            type = input()
-            if (type == '1'):
-                conditions.append(result)
-            elif (type == '2'):
-                effects.append(result) 
-            elif (type == '3'):
-                pass
-            elif (type == '4'):
-                pass
+            result = postProcessor.PostProcessor.listify(result)
+            result = eval(result)
+            if isinstance(result, list):
+                print("1: ")
+                print(result)
+                result = postProcessor.PostProcessor.removeIrrelevantCode(result, inputText, params, preds)
+                print("2: ")
+                print(result)
+                for code in result:
+                    code = replaceReverse(code, params, preds)
+                    code = code.replace("? ", "?")
+                    code = code.replace("?", " ?")
+                    print("The following line of code has been generated:")
+                    print(code)
+                    print("Select whether the above line of code is a condition or an effect.")
+                    print("1: condition")
+                    print("2: effect")
+                    print("3: both")
+                    print("4: neither")
+                    type = input()
+                    if (type == '1'):
+                        conditions.append(code)
+                    elif (type == '2'):
+                        effects.append(code) 
+                    elif (type == '3'):
+                        pass
+                    elif (type == '4'):
+                        pass
+            else:
+                print("Error: Could not create list")
         else:
             print("Could not generate a prompt for this sentence...trying the next sentence.")
     name = input("What would you like to call this action?")
     printPDDL(name, params, preds, duration, conditions, effects)   
 
 main()
+
