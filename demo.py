@@ -1,5 +1,4 @@
 import processInput
-import sentenceProcessor
 import postProcessor
 import nltk
 from sentence_transformers import SentenceTransformer
@@ -12,7 +11,7 @@ def main():
     conditions = []
     effects = []
     print("Here are some possible parameters:")
-    possibleParams = sentenceProcessor.SentenceProcessor.getPossibleParamsandPreds(nlText, 'params')
+    possibleParams = processInput.ProcessInput.getPossibleParamsandPreds(nlText, 'params')
     count = 0
     for param in possibleParams:
         print(str(count)+": "+possibleParams[count])
@@ -47,7 +46,7 @@ def main():
     print("Parameter selection complete.")
     print("The parameters are: ")
     print(params)
-    possiblePreds = sentenceProcessor.SentenceProcessor.getPossibleParamsandPreds(nlText, 'preds')
+    possiblePreds = processInput.ProcessInput.getPossibleParamsandPreds(nlText, 'preds')
     print("Here are some possible predicates:")
     count = 0
     for pred in possiblePreds:
