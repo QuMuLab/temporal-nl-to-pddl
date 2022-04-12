@@ -1,5 +1,6 @@
 import pickle
 
+# This class provides methods for reading in the data from xml files.
 class FileReader:
 
     def getObj(fileName):
