@@ -1,8 +1,9 @@
 import data
-import sentenceProcessor
 import postProcessor
 import nltk
+import pickle
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # This class provides most of the methods used by the model to process the NL input and generate appropriate PDDL code.
 class ProcessInput:
@@ -124,7 +125,7 @@ class ProcessInput:
     def findSimilarities(inputEmbedding, annot, name, actionNum, annotNum):
         annot = ProcessInput.replaceParamsandPreds(annot, data.Data.params[name], data.Data.preds[name], 0)
         tokenizedAnnot = nltk.sent_tokenize(annot)
-        sim = sentenceProcessor.SentenceProcessor.checkSim(inputEmbedding, tokenizedAnnot, actionNum, annotNum)
+        sim = ProcessInput.checkSim(inputEmbedding, tokenizedAnnot, actionNum, annotNum)
         return sim
 
     # takes an input string representing a piece of natural language text, a list of parameters 
@@ -232,3 +233,26 @@ class ProcessInput:
             if word in sentence:
                 found = True
         return found
+
+    # checks the cosine similarity between a sentence and a list of other sentences
+    def checkSim(inputEmbedding, others, actionNum, annotNum):
+        path = 'Desktop/TempNLtoPDDL/Embeddings/action' + str(actionNum) + '/embeddings' + str(annotNum) + '.xml'
+        file = open(path, 'rb')
+        sentence_embeddings = pickle.load(file)
+        sim = cosine_similarity(inputEmbedding, sentence_embeddings)
+        return sim
+
+    # returns a list of all possible parameters or all possible predicates
+    def getPossibleParamsandPreds(text, type):
+        text = text.replace('.','')
+        text  = text .replace(',','')
+        words = []
+        if type == 'params':
+            for word,pos in nltk.pos_tag(nltk.word_tokenize(str(text))):
+                if (pos == 'NN' or pos == 'NNP' or pos == 'NNS' or pos == 'NNPS'):
+                    words.append(word)
+        elif type == 'preds':
+            for word,pos in nltk.pos_tag(nltk.word_tokenize(str(text))):
+                if (pos == 'JJ' or pos == 'JJR' or pos == 'JJS' or pos == 'IN' or pos == 'RBR' or pos == 'RBS' or pos == 'VBD' or 'VBG' or pos == 'VBN' or pos == 'VBZ'):
+                    words.append(word)
+        return words
