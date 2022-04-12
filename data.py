@@ -1,5 +1,6 @@
 import fileReader
 
+# This class holds all of the data used by the model
 class Data:
 
     actions = fileReader.FileReader.getActions()
